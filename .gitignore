@@ -1,5 +1,6 @@
 data/
+dataset/
 models/
-loss.csv/
+loss.csv
 __pycache__/
 .vscode/
