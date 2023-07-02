@@ -4,6 +4,7 @@ import torchvision.transforms as tr
 from my_transforms import *
 from my_dataset import MyDataset, get_dataset_paths, count_clouds_class
 import torch
+from torch.utils.data import DataLoader
 
 print("Starting...")
 
@@ -12,16 +13,21 @@ print("Device in use: ", device)
 
 _, test_paths = get_dataset_paths()
 
+print(len(test_paths))
+test_paths = test_paths[:len(test_paths)//2]
+print(len(test_paths))
+
 transform = tr.Compose([
-    MyToTensor()
+    MyToTensor(),
+    MyRandomVerticalFlip(p=0.5),
+    MyRandomHorizontalFlip(p=0.5),
+    MyRandomRotation(degrees=90)
 ])
 
 train_dataset = MyDataset(test_paths, transform=transform)
+test_loader = DataLoader(train_dataset, batch_size=1, shuffle=False)
 
 print("Dataset loaded")
-
-n_clouds, n_background = count_clouds_class(test_paths)
-print(f"Clouds: {n_clouds}, Backgrounds: {n_background}")
 
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
@@ -36,7 +42,7 @@ tn = 0
 fp = 0
 fn = 0
 
-for data, label in train_dataset:
+for i, (data, label) in enumerate(test_loader):
     data_10m, data_20m, data_60m = data
 
     data_10m = data_10m.to(device)
@@ -58,7 +64,9 @@ for data, label in train_dataset:
     fp += torch.sum((output1 == 1) & (label == 0))
     fn += torch.sum((output1 == 0) & (label == 1))
 
-    break
+    if i % (len(test_loader) // 10) == 0:
+        percent = i / len(test_loader) * 100
+        print(f"Testing... {percent}%")
 
 # accuracy
 acc = (tp + tn) / (tp + tn + fp + fn)
@@ -73,11 +81,6 @@ rec = tp / (tp + fn)
 f1 = 2 * prec * rec / (prec + rec)
 
 # confusion matrix %
-tot = tp + tn + fp + fn
-tp = tp / tot
-tn = tn / tot
-fp = fp / tot
-fn = fn / tot
 
 print(f"Accuracy: {acc}")
 print(F"Precision {prec}")
@@ -85,5 +88,5 @@ print(f"Recall {rec}")
 print(f"F1 {f1}")
 print()
 print(" \t 0\t 1")
-print(f"0\t{tn}%\t{fp}%")
-print(f"1\t{fn}%\t{tp}%")
+print(f"0\t{tn}\t{fp}")
+print(f"1\t{fn}\t{tp}")
