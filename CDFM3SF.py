@@ -135,6 +135,8 @@ class CDFM3SF(nn.Module):
         self.output3 = nn.Conv2d(gf_dim, 1, kernel_size=1, stride=1)
 
     def forward(self, input_, input_1, input_2):
+        # TODO: dividere in sezioni sta funzione
+        # TODO: aggiungere commenti
         mom = self.conv1(input_)
         e10 = self.relu(mom)
         e1 = self.relu(self.batch_norm1(self.MDSC1(e10)))

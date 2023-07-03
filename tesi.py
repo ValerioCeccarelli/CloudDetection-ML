@@ -91,3 +91,6 @@ optimizer = Adam(model.parameters(), lr=0.00025, betas=(0.5, 0.9))
 
 print("Starting training...")
 train(model, train_loader, optimizer, my_loss, saver, n_epochs=100)
+
+# TODO: fare il train con un while loop invece che con un numero di epoche fissato
+# TODO: salvare solamente ogni epoca

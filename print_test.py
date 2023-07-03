@@ -12,6 +12,8 @@ import sys
 
 args = sys.argv[1:]
 
+# TODO: rendere il modello il primo parametro e i test i successivi
+
 if len(args) < 1:
     print('Usage: python print_test.py <path_to_test1> [<path_to_test2> ...]')
     exit(1)
