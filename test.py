@@ -13,15 +13,10 @@ print("Device in use: ", device)
 
 _, test_paths = get_dataset_paths()
 
-print(len(test_paths))
 test_paths = test_paths[:len(test_paths)//2]
-print(len(test_paths))
 
 transform = tr.Compose([
-    MyToTensor(),
-    MyRandomVerticalFlip(p=0.5),
-    MyRandomHorizontalFlip(p=0.5),
-    MyRandomRotation(degrees=90)
+    MyToTensor()
 ])
 
 train_dataset = MyDataset(test_paths, transform=transform)
@@ -65,7 +60,7 @@ for i, (data, label) in enumerate(test_loader):
     fn += torch.sum((output1 == 0) & (label == 1))
 
     if i % (len(test_loader) // 10) == 0:
-        percent = i / len(test_loader) * 100
+        percent = i // len(test_loader) * 100
         print(f"Testing... {percent}%")
 
 # accuracy
