@@ -9,10 +9,12 @@ import torch.nn as nn
 from my_transforms import *
 
 
-def train(model, loader, optimizer: Optimizer, loss_fn, saver: Saver, n_epochs=1):
+def train(model, loader, optimizer: Optimizer, loss_fn, saver: Saver):
     model.train()
 
-    for epoch in range(n_epochs):
+    epoch = saver.get_last_epoch() + 1
+
+    while True:
         loss_list = []
         for data, label in loader:
             optimizer.zero_grad()
@@ -32,11 +34,12 @@ def train(model, loader, optimizer: Optimizer, loss_fn, saver: Saver, n_epochs=1
 
             loss_list.append(loss.item())
 
-            if len(loss_list) % 1000 == 0:
-                mean_loss = sum(loss_list) / len(loss_list)
-                saver.save(mean_loss, epoch)
-                print(f'Epoch: {epoch}, loss: {mean_loss}')
-                loss_list = []
+        mean_loss = sum(loss_list) / len(loss_list)
+        saver.save(epoch, mean_loss)
+
+        print(f"Epoch: {epoch}, Loss: {mean_loss}")
+
+        epoch += 1
 
 
 def my_loss(output1, output2, output3, label) -> torch.Tensor:
@@ -90,7 +93,7 @@ saver.load()
 optimizer = Adam(model.parameters(), lr=0.00025, betas=(0.5, 0.9))
 
 print("Starting training...")
-train(model, train_loader, optimizer, my_loss, saver, n_epochs=100)
+train(model, train_loader, optimizer, my_loss, saver)
 
 # TODO: fare il train con un while loop invece che con un numero di epoche fissato
 # TODO: salvare solamente ogni epoca

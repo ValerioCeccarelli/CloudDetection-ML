@@ -17,7 +17,7 @@ class Saver:
         self.path = path
         if self.path is None:
             self.path = os.getcwd()
-        self.model_count = 0
+        self.epoch = 0
         self.model = model
 
     def load(self):
@@ -26,28 +26,26 @@ class Saver:
         if os.path.exists(models_dir):
             models = [model for model in os.listdir(
                 models_dir) if model.endswith('.pth')]
-            numbers = [int(model.split('_')[1].split('.')[0]) for model in models]
+            numbers = [int(model.split('_')[1].split('.')[0])
+                       for model in models]
             numbers.sort()
             if len(numbers) > 0:
                 last_model = numbers[-1]
-                model_path = os.path.join(models_dir, f'model_{last_model}.pth')
-                self.model_count = last_model
+                model_path = os.path.join(
+                    models_dir, f'model_{last_model}.pth')
+                self.epoch = last_model
                 self.model.load_state_dict(torch.load(model_path))
-                print(f'Loaded model {model_path}')
 
-        print(f'Current model {self.model_count}')
-        self.model_count += 1
-
-    def save_model(self):
+    def save_model(self, epoch: int):
         models_dir = os.path.join(self.path, 'models')
         if not os.path.exists(models_dir):
             os.mkdir(models_dir)
 
         model_path = os.path.join(
-            models_dir, f'model_{self.model_count}.pth')
+            models_dir, f'model_{epoch}.pth')
         print(f'Saving model {model_path}')
         torch.save(self.model.state_dict(), model_path)
-        self.model_count += 1
+        self.epoch = epoch
 
     def save_loss(self, loss: float, epoch: int):
         loss_path = os.path.join(self.path, 'loss.csv')
@@ -56,7 +54,9 @@ class Saver:
                 f.write('model,epoch,loss\n')
 
         with open(loss_path, 'a') as f:
-            f.write(f'{self.model_count},{epoch},{loss}\n')
+            f.write(f'{epoch},{loss}\n')
+
+        self.epoch = epoch
 
     def save(self, loss: float, epoch: int):
         '''
@@ -69,7 +69,7 @@ class Saver:
         epoch : int
             The epoch number
         '''
-        self.save_model()
+        self.save_model(epoch)
         self.save_loss(loss, epoch)
 
     def read_loss(self):
@@ -84,3 +84,6 @@ class Saver:
                 results.append((int(model), int(epoch), float(loss)))
 
         return results
+
+    def get_last_epoch(self):
+        return self.epoch
