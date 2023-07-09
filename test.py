@@ -60,7 +60,7 @@ for i, (data, label) in enumerate(test_loader):
     fn += torch.sum((output1 == 0) & (label == 1))
 
     if i % (len(test_loader) // 10) == 0:
-        percent = i // len(test_loader) * 100
+        percent = i * 100 // len(test_loader)
         print(f"Testing... {percent}%")
 
 # accuracy
