@@ -38,6 +38,8 @@ model = model.to(device)
 saver = Saver(model)
 saver.load()
 
+model.eval()
+
 fig, axs = plt.subplots(len(args), 3, figsize=(15, 5 * len(args)))
 
 if len(args) == 1:
@@ -49,32 +51,33 @@ else:
     axs[0][1].set_title('Prediction')
     axs[0][2].set_title('Ground truth')
 
-for i, data in enumerate(test_dataloader):
-    (d10m, d20m, d60m), label = data
-    d10m = d10m.to(device)
-    d20m = d20m.to(device)
-    d60m = d60m.to(device)
-    label = label.to(device)
+with torch.no_grad():
+    for i, data in enumerate(test_dataloader):
+        (d10m, d20m, d60m), label = data
+        d10m = d10m.to(device)
+        d20m = d20m.to(device)
+        d60m = d60m.to(device)
+        label = label.to(device)
 
-    pred = model(d10m, d20m, d60m)
-    pred = torch.sigmoid(pred[0])
-    pred = torch.where(pred > 0.5, 1, 0)
-    pred = pred.cpu()[0][0].detach().numpy()
+        pred = model(d10m, d20m, d60m)
+        pred = torch.sigmoid(pred[0])
+        pred = torch.where(pred > 0.5, 1, 0)
+        pred = pred.cpu()[0][0].detach().numpy()
 
-    label = label.cpu()[0][0].detach().numpy()
+        label = label.cpu()[0][0].detach().numpy()
 
-    input = d10m.cpu()[0][:3].detach().numpy()
-    input = np.transpose(input, (1, 2, 0))
-    input = input[..., ::-1]
+        input = d10m.cpu()[0][:3].detach().numpy()
+        input = np.transpose(input, (1, 2, 0))
+        input = input[..., ::-1]
 
-    if len(args) == 1:
-        axs[0].imshow(input)
-        axs[1].imshow(pred, cmap='gray')
-        axs[2].imshow(label, cmap='gray')
-    else:
-        axs[i][0].imshow(input)
-        axs[i][1].imshow(pred, cmap='gray')
-        axs[i][2].imshow(label, cmap='gray')
+        if len(args) == 1:
+            axs[0].imshow(input)
+            axs[1].imshow(pred, cmap='gray')
+            axs[2].imshow(label, cmap='gray')
+        else:
+            axs[i][0].imshow(input)
+            axs[i][1].imshow(pred, cmap='gray')
+            axs[i][2].imshow(label, cmap='gray')
 
 plt.savefig('result.png')
 

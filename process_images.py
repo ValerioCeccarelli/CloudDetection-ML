@@ -34,8 +34,6 @@ bands = [['10m', ('02', '03', '04', '08')], [
 
 
 def fuze_img(file_path):
-    # file_name = dir.split('.')[0]
-
     granule_dir = os.path.join(file_path, 'GRANULE')
     granule = os.listdir(granule_dir)[0]
     granule_path = os.path.join(granule_dir, granule)

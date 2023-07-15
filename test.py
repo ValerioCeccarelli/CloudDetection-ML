@@ -30,6 +30,9 @@ model = model.to(device)
 saver = Saver(model)
 saver.load()
 
+model.eval()
+
+
 print("Model loaded")
 
 tp = 0
@@ -37,31 +40,32 @@ tn = 0
 fp = 0
 fn = 0
 
-for i, (data, label) in enumerate(test_loader):
-    data_10m, data_20m, data_60m = data
+with torch.no_grad():
+    for i, (data, label) in enumerate(test_loader):
+        data_10m, data_20m, data_60m = data
 
-    data_10m = data_10m.to(device)
-    data_20m = data_20m.to(device)
-    data_60m = data_60m.to(device)
+        data_10m = data_10m.to(device)
+        data_20m = data_20m.to(device)
+        data_60m = data_60m.to(device)
 
-    output1, _, _ = model(data_10m, data_20m, data_60m)
+        output1, _, _ = model(data_10m, data_20m, data_60m)
 
-    output1 = torch.sigmoid(output1)
-    output1 = output1.squeeze(1)
-    output1 = torch.where(output1 > 0.5, 1, 0)
+        output1 = torch.sigmoid(output1)
+        output1 = output1.squeeze(1)
+        output1 = torch.where(output1 > 0.5, 1, 0)
 
-    label = label.to(device)
-    label = label.squeeze(1)
+        label = label.to(device)
+        label = label.squeeze(1)
 
-    # confusion matrix
-    tp += torch.sum((output1 == 1) & (label == 1))
-    tn += torch.sum((output1 == 0) & (label == 0))
-    fp += torch.sum((output1 == 1) & (label == 0))
-    fn += torch.sum((output1 == 0) & (label == 1))
+        # confusion matrix
+        tp += torch.sum((output1 == 1) & (label == 1))
+        tn += torch.sum((output1 == 0) & (label == 0))
+        fp += torch.sum((output1 == 1) & (label == 0))
+        fn += torch.sum((output1 == 0) & (label == 1))
 
-    if i % (len(test_loader) // 10) == 0:
-        percent = i * 100 // len(test_loader)
-        print(f"Testing... {percent}%")
+        if i % (len(test_loader) // 10) == 0:
+            percent = i * 100 // len(test_loader)
+            print(f"Testing... {percent}%")
 
 # accuracy
 acc = (tp + tn) / (tp + tn + fp + fn)
