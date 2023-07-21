@@ -67,7 +67,7 @@ print("Starting...")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device in use: ", device)
 
-train_paths, _ = get_dataset_paths()
+train_paths, _, _ = get_dataset_paths()
 
 transform = tr.Compose([
     MyToTensor(),

@@ -11,7 +11,7 @@ print("Starting...")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device in use: ", device)
 
-_, test_paths = get_dataset_paths()
+_, _, test_paths = get_dataset_paths()
 
 test_paths = test_paths[:len(test_paths)//2]
 
