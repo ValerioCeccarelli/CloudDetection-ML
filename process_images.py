@@ -29,9 +29,11 @@ print('\nExtracting bands...\n')
 
 extract_time_start = time.time()
 
-bands = [['10m', ('02', '03', '04', '08')], [
-    '20m', ('05', '06', '07', '8A', '11', '12')], ['60m', ('01', '09', '10')]]
-
+bands = [
+    ['10m', ('02', '03', '04', '08')], 
+    ['20m', ('05', '06', '07', '8A', '11', '12')], 
+    ['60m', ('01', '09', '10')]
+]
 
 def fuze_img(file_path):
     granule_dir = os.path.join(file_path, 'GRANULE')
@@ -61,6 +63,11 @@ def fuze_img(file_path):
             os.makedirs(save_dir)
         save_path = os.path.join(save_dir, band_name + '.tif')
         imgwrite(save_path, fused_img)
+    
+    img_10m = imgread(os.path.join(save_dir, '10m.tif'))
+    img_RGB = img_10m[:, :, [2, 1, 0]]
+    # save RGB image as png
+    imgwrite(os.path.join(save_dir, 'RGB.png'), img_RGB)
 
 
 for file in os.listdir(data_dir):
