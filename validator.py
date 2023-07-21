@@ -20,7 +20,7 @@ dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device {device}')
 
-model = CDFM3SF()
+model = CDFM3SF([4, 6, 3], gf_dim=64)
 model.to(device)
 
 n_clouds, n_background = count_clouds_class(train_paths)
