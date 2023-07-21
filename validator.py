@@ -23,8 +23,11 @@ print(f'Using device {device}')
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model.to(device)
 
-n_clouds, n_background = count_clouds_class(train_paths)
-print(f"Clouds: {n_clouds}, Backgrounds: {n_background}")
+# n_clouds, n_background = count_clouds_class(train_paths)
+# print(f"Clouds: {n_clouds}, Backgrounds: {n_background}")
+# Clouds: 433635457, Backgrounds: 2265694079
+n_clouds = 433635457
+n_background = 2265694079
 
 weight = torch.Tensor([n_background/n_clouds]).to(device)
 loss_fn = nn.BCEWithLogitsLoss(weight=weight)
