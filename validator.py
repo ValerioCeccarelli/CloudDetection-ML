@@ -31,9 +31,9 @@ loss_fn = nn.BCEWithLogitsLoss(weight=weight)
 
 print('Starting validation...\n')
 
-for model in models:
-    print(f'Loading model {model}')
-    model_state_dict = torch.load(model)
+for saved_model in models:
+    print(f'Loading model {saved_model}')
+    model_state_dict = torch.load(saved_model)
     model.load_state_dict(model_state_dict)
 
     model.eval()
