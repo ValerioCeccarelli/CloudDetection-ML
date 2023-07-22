@@ -4,3 +4,5 @@ models/
 loss.csv
 __pycache__/
 .vscode/
+
+*.csv
