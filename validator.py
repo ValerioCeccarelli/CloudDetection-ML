@@ -33,8 +33,13 @@ n_background = 2265694079
 
 print('Starting validation...\n')
 
-file = open("validation.csv", "w")
-file.write("model,TP,TN,FP,FN,accuracy,precision,recall,f1,loss\n")
+
+def file_write(row):
+    with open("validation.csv", "a") as file:
+        file.write(row)
+
+
+file_write("model,TP,TN,FP,FN,accuracy,precision,recall,f1,loss\n")
 
 
 def my_loss(output1, output2, output3, label) -> torch.Tensor:
@@ -101,7 +106,7 @@ def test():
     print(
         f'Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1: {f1}, Loss: {loss}')
 
-    file.write(
+    file_write(
         f"{n},{tp},{tn},{fp},{fn},{accuracy},{precision},{recall},{f1},{loss}\n")
 
     print()
@@ -118,3 +123,5 @@ for n, saved_model in enumerate(models):
     model.load_state_dict(model_state_dict)
 
     test()
+
+print('Done')
