@@ -1,9 +1,11 @@
 import os
-from my_dataset import MyDataset, count_clouds_class, get_dataset_paths
+from my_dataset import MyDataset, get_dataset_paths
 from torch.utils.data import DataLoader
 import torch
 from CDFM3SF import CDFM3SF
 import torch.nn as nn
+from my_transforms import MyToTensor
+import torchvision.transforms as tr
 
 current_dir = os.getcwd()
 models_dir = os.path.join(current_dir, 'models')
@@ -14,7 +16,7 @@ models = [os.path.join(models_dir, model) for model in models]
 
 train_paths, validation_paths, _ = get_dataset_paths()
 
-dataset = MyDataset(validation_paths)
+dataset = MyDataset(validation_paths, transform=MyToTensor())
 dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -29,18 +31,33 @@ model.to(device)
 n_clouds = 433635457
 n_background = 2265694079
 
-weight = torch.Tensor([n_background/n_clouds]).to(device)
-loss_fn = nn.BCEWithLogitsLoss(weight=weight)
-
 print('Starting validation...\n')
 
-for saved_model in models:
-    print(f'Loading model {saved_model}')
-    model_state_dict = torch.load(saved_model)
-    model.load_state_dict(model_state_dict)
+file = open("validation.csv", "w")
+file.write("model,TP,TN,FP,FN,accuracy,precision,recall,f1,loss\n")
 
-    model.eval()
 
+def my_loss(output1, output2, output3, label) -> torch.Tensor:
+    output1 = output1.squeeze(1)
+    output2 = output2.squeeze(1)
+    output3 = output3.squeeze(1)
+    label = label.squeeze(1)
+
+    label1 = label
+    label2 = tr.Resize((192, 192), antialias=False)(label)
+    label3 = tr.Resize((64, 64), antialias=False)(label)
+
+    weight = torch.Tensor([n_background/n_clouds]).to(device)
+    loss_fn = nn.BCEWithLogitsLoss(weight=weight)
+
+    loss1 = loss_fn(output1, label1)
+    loss2 = loss_fn(output2, label2)
+    loss3 = loss_fn(output3, label3)
+
+    return 1*loss1 + 0.1*loss2 + 0.01*loss3
+
+
+def test():
     tp = 0
     tn = 0
     fp = 0
@@ -48,21 +65,25 @@ for saved_model in models:
 
     loss = 0
 
+    model.eval()
     with torch.no_grad():
-        for i, (data, label) in enumerate(dataloader):
+        for data, label in dataloader:
             data_10m, data_20m, data_60m = data
 
             data_10m = data_10m.to(device)
             data_20m = data_20m.to(device)
             data_60m = data_60m.to(device)
 
-            output1, _, _ = model(data_10m, data_20m, data_60m)
+            output1, output2, output3 = model(data_10m, data_20m, data_60m)
+
+            label = label.to(device)
+
+            loss += my_loss(output1, output2, output3, label)
 
             output1 = torch.sigmoid(output1)
             output1 = output1.squeeze(1)
             output1 = torch.where(output1 > 0.5, 1, 0)
 
-            label = label.to(device)
             label = label.squeeze(1)
 
             # confusion matrix
@@ -76,7 +97,24 @@ for saved_model in models:
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1 = 2 * precision * recall / (precision + recall)
+    loss = loss / len(dataloader)
     print(
-        f'Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1: {f1}')
+        f'Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1: {f1}, Loss: {loss}')
+
+    file.write(
+        f"{n},{tp},{tn},{fp},{fn},{accuracy},{precision},{recall},{f1},{loss}\n")
 
     print()
+
+
+n = -1
+print('random model')
+test()
+
+
+for n, saved_model in enumerate(models):
+    print(f'Loading model {saved_model}')
+    model_state_dict = torch.load(saved_model)
+    model.load_state_dict(model_state_dict)
+
+    test()
