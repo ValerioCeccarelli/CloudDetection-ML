@@ -107,7 +107,7 @@ class CDFM3SF(nn.Module):
 
         self.MDSC4 = MDSC(gf_dim, gf_dim, stride=1)
 
-        self.pad = nn.ZeroPad2d(1)
+        self.pad = nn.ZeroPad2d(1)  # ???
 
         self.deconv1 = nn.ConvTranspose2d(
             gf_dim * 2, gf_dim, kernel_size=4, stride=2, padding=1)
@@ -150,9 +150,8 @@ class CDFM3SF(nn.Module):
         p2 = self.pool2(e2)
         e30 = self.relu(self.conv3(input_2))
         c230 = torch.cat([p2, e30], dim=1)
-        mom2 = self.MDSC3(c230)
-        mom3 = self.batch_norm3(mom2)
-        e3 = self.relu(mom3)
+
+        e3 = self.relu(self.batch_norm3(self.MDSC3(c230)))
         e3 = p2 + e30 + e3
         p3 = self.pool3(e3)
         e4 = self.relu(self.MDSC4(p3))
@@ -170,7 +169,7 @@ class CDFM3SF(nn.Module):
         d1 = self.deconv1(d1)
         d1 = torch.cat([d1, e3], dim=1)
         d1 = self.relu(self.DSC2(d1))
-        output3 = self.output3(d1)
+        output3 = self.output3(d1)  # rinominare sta funzione in modo sensato
 
         d2 = self.deconv2(d1)
         d2 = torch.cat([d2, e2], dim=1)
