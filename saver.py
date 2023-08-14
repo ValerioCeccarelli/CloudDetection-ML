@@ -86,4 +86,7 @@ class Saver:
         return results
 
     def get_last_epoch(self):
+        """
+        If it is the first time, it will return 0
+        """
         return self.epoch
