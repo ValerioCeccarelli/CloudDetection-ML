@@ -57,13 +57,13 @@ class SDC(nn.Module):
     Implementation of shared dilated convolution residual block.
     '''
 
-    def __init__(self, in_out_channels, kernel_size=3, stride=1, padding=0, dilation=1) -> None:
+    def __init__(self, in_out_channels, kernel_size=3, stride=1, padding=1, dilation=1, biased=True) -> None:
         super(SDC, self).__init__()
 
         self.shared_conv = SharedConv(
-            in_out_channels, kernel_size, stride, padding=1, bias=False)
+            in_out_channels, kernel_size, stride, padding=padding, bias=False)
         self.dilated_conv = nn.Conv2d(
-            in_out_channels, in_out_channels, kernel_size, stride, padding=1, bias=True)
+            in_out_channels, in_out_channels, 3, stride, padding=1, bias=biased)
 
     def forward(self, x):
         shared_output = self.shared_conv(x)
@@ -77,13 +77,13 @@ class SDRB(nn.Module):
     Shared and dilated convolution residual block layer
     '''
 
-    def __init__(self, in_out_channels, kernel_size=3, stride=1, dilation=2, biased=True) -> None:
+    def __init__(self, in_out_channels, kernel_size=3, stride=1, dilation=2, biased=True, padding=1) -> None:
         super(SDRB, self).__init__()
 
         self.shared_dilated_conv_1 = SDC(
-            in_out_channels, kernel_size, stride, dilation=dilation)
+            in_out_channels, kernel_size, stride, dilation=dilation, biased=biased, padding=padding)
         self.shared_dilated_conv_2 = SDC(
-            in_out_channels, kernel_size, stride, dilation=dilation)
+            in_out_channels, kernel_size, stride, dilation=dilation, biased=biased, padding=padding)
 
         self.batch_norm_1 = nn.BatchNorm2d(in_out_channels)
         self.batch_norm_2 = nn.BatchNorm2d(in_out_channels)
@@ -105,18 +105,21 @@ class SDRB(nn.Module):
 
 class MDSC(nn.Module):
 
-    def __init__(self, input_dim, output_dim, kernel_list=[3, 5], stride=1, padding="same", scale=1, biased=True):
+    # TODO: da aggiustare con la kernel list
+    def __init__(self, input_dim, output_dim):
         super(MDSC, self).__init__()
 
-        self.shared_conv_1 = SharedConv(input_dim, 3)
-        self.shared_conv_2 = SharedConv(input_dim, 5, padding=1)
+        self.separable_conv_1 = nn.Conv2d(
+            input_dim, input_dim, 3, padding=1, groups=input_dim, bias=False)
+        self.separable_conv_2 = nn.Conv2d(
+            input_dim, input_dim, 5, padding=2, groups=input_dim, bias=False)
 
         self.conv = nn.Conv2d(input_dim*2, output_dim,
-                              1, bias=biased, padding=1)
+                              1, bias=False, padding=0)
 
     def forward(self, x):
-        output_1 = self.shared_conv_1(x)
-        output_2 = self.shared_conv_2(x)
+        output_1 = self.separable_conv_1(x)
+        output_2 = self.separable_conv_2(x)
 
         output = torch.cat([output_1, output_2], dim=1)
         output = self.conv(output)
@@ -139,15 +142,15 @@ class CDFM3SF(nn.Module):
         self.batch_norm2 = nn.BatchNorm2d(gf_dim)
         self.batch_norm3 = nn.BatchNorm2d(gf_dim)
 
-        self.MDSC1 = MDSC(gf_dim, gf_dim, stride=1)
-        self.MDSC2 = MDSC(gf_dim * 2, gf_dim, stride=1)
-        self.MDSC3 = MDSC(gf_dim * 2, gf_dim, stride=1)
+        self.MDSC1 = MDSC(gf_dim, gf_dim)
+        self.MDSC2 = MDSC(gf_dim * 2, gf_dim)
+        self.MDSC3 = MDSC(gf_dim * 2, gf_dim)
 
         self.pool1 = nn.MaxPool2d(2, 2)
         self.pool2 = nn.MaxPool2d(3, 3)
         self.pool3 = nn.MaxPool2d(2, 2)
 
-        self.MDSC4 = MDSC(gf_dim, gf_dim, stride=1)
+        self.MDSC4 = MDSC(gf_dim, gf_dim)
 
         self.deconv1 = nn.ConvTranspose2d(
             gf_dim * 2, gf_dim, kernel_size=4, stride=2, padding=1)
@@ -161,12 +164,12 @@ class CDFM3SF(nn.Module):
         self.DSC3 = DSC(gf_dim*2, gf_dim, stride=1)
         self.DSC4 = DSC(gf_dim*2, gf_dim, stride=1)
 
-        self.SDRB1 = SDRB(gf_dim, kernel_size=3, stride=1, dilation=2)
-        self.SDRB2 = SDRB(gf_dim, kernel_size=3, stride=1, dilation=2)
-        self.SDRB3 = SDRB(gf_dim, kernel_size=3, stride=1, dilation=3)
-        self.SDRB4 = SDRB(gf_dim, kernel_size=3, stride=1, dilation=3)
-        self.SDRB5 = SDRB(gf_dim, kernel_size=3, stride=1, dilation=4)
-        self.SDRB6 = SDRB(gf_dim, kernel_size=3, stride=1, dilation=4)
+        self.SDRB1 = SDRB(gf_dim, kernel_size=5, dilation=2, padding=2)
+        self.SDRB2 = SDRB(gf_dim, kernel_size=5, dilation=2, padding=2)
+        self.SDRB3 = SDRB(gf_dim, kernel_size=7, dilation=3, padding=3)
+        self.SDRB4 = SDRB(gf_dim, kernel_size=7, dilation=3, padding=3)
+        self.SDRB5 = SDRB(gf_dim, kernel_size=9, dilation=4, padding=4)
+        self.SDRB6 = SDRB(gf_dim, kernel_size=9, dilation=4, padding=4)
 
         self.relu = nn.ReLU(inplace=True)
 
