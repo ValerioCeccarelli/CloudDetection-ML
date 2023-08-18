@@ -70,7 +70,7 @@ def get_dataset_paths(root_path: str = None) -> tuple[list[str], list[str], list
     if root_path is None:
         root_path = os.getcwd()
 
-    dataset_dir = os.path.join(root_path, '..', 'dataset')
+    dataset_dir = os.path.join(root_path, 'dataset')
 
     if not os.path.exists(dataset_dir):
         raise Exception(f'Dataset directory not found. {dataset_dir}')
