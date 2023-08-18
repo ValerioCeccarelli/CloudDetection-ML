@@ -3,7 +3,7 @@ from torch.optim import Adam, Optimizer
 from torch.optim.lr_scheduler import ExponentialLR
 from my_dataset import MyDataset, get_dataset_paths, count_clouds_class
 from torch.utils.data import DataLoader
-from CDFM3SF import CDFM3SF
+from new_model import CDFM3SF
 import torchvision.transforms as tr
 import torch.nn as nn
 from my_transforms import *
