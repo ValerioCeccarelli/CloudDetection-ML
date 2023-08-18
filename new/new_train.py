@@ -159,7 +159,7 @@ def get_last_saved_epoch() -> int:
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-my_print("Device in use: ", device)
+my_print(f"Device in use: {device}")
 
 train_paths, validation_paths, _ = get_dataset_paths()
 
