@@ -11,6 +11,11 @@ import os
 import time
 
 
+def my_print(msg):
+    with open("log.txt", "a+") as f:
+        f.write(msg + "\n")
+
+
 def train_epoch(model, loader, loss_fn, optimizer: Optimizer, device):
     model.train()
 
@@ -89,7 +94,7 @@ def train(model, loader, optimizer: Optimizer, loss_fn, device, scheduler, valid
         mean_loss = train_epoch(model, loader, loss_fn, optimizer, device)
         end_time = time.time()
 
-        print(
+        my_print(
             f"Epoch: {epoch}, Loss: {mean_loss}, Time: {end_time - start_time}")
         scheduler.step()
 
@@ -97,7 +102,7 @@ def train(model, loader, optimizer: Optimizer, loss_fn, device, scheduler, valid
         mean_loss = validation(model, validation_loader, loss_fn, device)
         end_time = time.time()
 
-        print(
+        my_print(
             f" -   Validation loss: {mean_loss}, Time: {end_time - start_time}")
 
         save_model(model, epoch, mean_loss, mean_loss, optimizer, scheduler)
@@ -154,7 +159,7 @@ def get_last_saved_epoch() -> int:
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device in use: ", device)
+my_print("Device in use: ", device)
 
 train_paths, validation_paths, _ = get_dataset_paths()
 
@@ -171,12 +176,12 @@ train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 validation_dataset = MyDataset(validation_paths)
 validation_loader = DataLoader(validation_dataset, batch_size=4, shuffle=True)
 
-print("Dataset loaded")
+my_print("Dataset loaded")
 
 # n_clouds, n_background = count_clouds_class(train_paths)
 n_clouds = 433635457
 n_background = 2265694079
-print(f"Clouds: {n_clouds}, Backgrounds: {n_background}")
+my_print(f"Clouds: {n_clouds}, Backgrounds: {n_background}")
 
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
@@ -191,7 +196,7 @@ if last_epoch != 0:
     load_model(model, optimizer, scheduler, last_epoch)
 
 
-print("Starting training...")
+my_print("Starting training...")
 train(model, train_loader, optimizer, my_loss,
       device, scheduler, validation_loader, last_epoch)
 
