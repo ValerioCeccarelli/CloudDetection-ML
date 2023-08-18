@@ -137,6 +137,8 @@ def load_model(model, optimizer, scheduler, epoch):
 
 def get_last_saved_epoch() -> int:
     if not os.path.exists(f"{SAVED_FOLDER}/{SAVE_FILE}"):
+        if not os.path.exists(SAVED_FOLDER):
+            os.mkdir(SAVED_FOLDER)
         with open(f"{SAVED_FOLDER}/{SAVE_FILE}", "w+") as f:
             f.write("epoch,train_loss,validation_loss,file_name\n")
 
