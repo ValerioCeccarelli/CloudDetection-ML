@@ -12,6 +12,7 @@ import time
 
 
 def my_print(msg):
+    print(msg)
     with open("log.txt", "a+") as f:
         f.write(msg + "\n")
 
