@@ -100,13 +100,13 @@ def train(model, loader, optimizer: Optimizer, loss_fn, device, scheduler, valid
     epoch = last_epoch + 1
 
     while True:
-        # start_time = time.time()
-        # mean_loss = train_epoch(model, loader, loss_fn, optimizer, device)
-        # end_time = time.time()
+        start_time = time.time()
+        mean_loss = train_epoch(model, loader, loss_fn, optimizer, device)
+        end_time = time.time()
 
-        # my_print(
-        #     f"Epoch: {epoch}, Loss: {mean_loss}, Time: {end_time - start_time}")
-        # scheduler.step()
+        my_print(
+            f"Epoch: {epoch}, Loss: {mean_loss}, Time: {end_time - start_time}")
+        scheduler.step()
 
         start_time = time.time()
         mean_loss = validation(model, validation_loader, loss_fn, device)
