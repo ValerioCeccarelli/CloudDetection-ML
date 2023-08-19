@@ -41,7 +41,6 @@ def train_epoch(model, loader, loss_fn, optimizer: Optimizer, device):
 
         if i % (len(loader) // 100) == 0:
             my_print(f" - {round(i/len(loader), 2)}")
-            loss_list = []
 
     mean_loss = sum(loss_list) / len(loss_list)
 
@@ -89,7 +88,6 @@ def validation(model, loader, loss_fn, device):
 
             if i % (len(loader) // 100) == 0:
                 my_print(f" - {round(i/len(loader), 2)}")
-                loss_list = []
 
         mean_loss = sum(loss_list) / len(loss_list)
 
