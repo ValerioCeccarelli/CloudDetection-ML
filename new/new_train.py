@@ -20,7 +20,7 @@ def train_epoch(model, loader, loss_fn, optimizer: Optimizer, device):
     model.train()
 
     loss_list = []
-    for data, label in loader:
+    for i, (data, label) in enumerate(loader):
         optimizer.zero_grad()
 
         data_10m, data_20m, data_60m = data
@@ -37,6 +37,10 @@ def train_epoch(model, loader, loss_fn, optimizer: Optimizer, device):
         optimizer.step()
 
         loss_list.append(loss.item())
+
+        if i % (len(loader) // 100) == 0:
+            my_print(f" - {i/len(loader)}")
+            loss_list = []
 
     mean_loss = sum(loss_list) / len(loss_list)
 
@@ -68,7 +72,8 @@ def validation(model, loader, loss_fn, device):
         model.eval()
 
         loss_list = []
-        for data, label in loader:
+
+        for i, (data, label) in enumerate(loader):
             data_10m, data_20m, data_60m = data
 
             data_10m = data_10m.to(device)
@@ -80,6 +85,10 @@ def validation(model, loader, loss_fn, device):
             loss: torch.Tensor = loss_fn(output1, output2, output3, label)
 
             loss_list.append(loss.item())
+
+            if i % (len(loader) // 100) == 0:
+                my_print(f" - {i/len(loader)}")
+                loss_list = []
 
         mean_loss = sum(loss_list) / len(loss_list)
 
