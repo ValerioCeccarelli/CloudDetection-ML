@@ -99,13 +99,13 @@ def train(model, loader, optimizer: Optimizer, loss_fn, device, scheduler, valid
     epoch = last_epoch + 1
 
     while True:
-        start_time = time.time()
-        mean_loss = train_epoch(model, loader, loss_fn, optimizer, device)
-        end_time = time.time()
+        # start_time = time.time()
+        # mean_loss = train_epoch(model, loader, loss_fn, optimizer, device)
+        # end_time = time.time()
 
-        my_print(
-            f"Epoch: {epoch}, Loss: {mean_loss}, Time: {end_time - start_time}")
-        scheduler.step()
+        # my_print(
+        #     f"Epoch: {epoch}, Loss: {mean_loss}, Time: {end_time - start_time}")
+        # scheduler.step()
 
         start_time = time.time()
         mean_loss = validation(model, validation_loader, loss_fn, device)
@@ -172,17 +172,22 @@ my_print(f"Device in use: {device}")
 
 train_paths, validation_paths, _ = get_dataset_paths()
 
-transform = tr.Compose([
+train_transform = tr.Compose([
     MyToTensor(),
     MyRandomVerticalFlip(p=0.5),
     MyRandomHorizontalFlip(p=0.5),
     MyRandomRotation(p=0.5, degrees=90)
 ])
 
-train_dataset = MyDataset(train_paths, transform=transform)
+train_dataset = MyDataset(train_paths, transform=train_transform)
 train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 
-validation_dataset = MyDataset(validation_paths)
+validation_transform = tr.Compose([
+    MyToTensor()
+])
+
+validation_dataset = MyDataset(
+    validation_paths, transform=validation_transform)
 validation_loader = DataLoader(validation_dataset, batch_size=4, shuffle=True)
 
 my_print("Dataset loaded")
