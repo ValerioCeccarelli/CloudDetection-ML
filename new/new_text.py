@@ -6,6 +6,10 @@ import torch
 from torch.utils.data import DataLoader
 from sys import argv
 
+if len(argv) > 2:
+    print("Usage: python new_test.py [model_path]")
+    exit()
+
 print("Starting...")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -25,10 +29,11 @@ print("Dataset loaded")
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
 
-save_path = argv[1]
-save_dict = torch.load(save_path)
-model_saved = save_dict['model_state_dict']
-model.load_state_dict(model_saved)
+if len(argv) > 1:
+    save_path = argv[1]
+    save_dict = torch.load(save_path)
+    model_saved = save_dict['model_state_dict']
+    model.load_state_dict(model_saved)
 
 print("Model loaded")
 
