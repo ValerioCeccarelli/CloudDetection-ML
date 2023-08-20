@@ -189,7 +189,7 @@ validation_transform = tr.Compose([
 
 validation_dataset = MyDataset(
     validation_paths, transform=validation_transform)
-validation_loader = DataLoader(validation_dataset, batch_size=4, shuffle=True)
+validation_loader = DataLoader(validation_dataset, batch_size=4)
 
 my_print("Dataset loaded")
 
