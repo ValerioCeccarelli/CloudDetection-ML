@@ -4,6 +4,7 @@ from my_transforms import *
 from my_dataset import MyDataset, get_dataset_paths
 import torch
 from torch.utils.data import DataLoader
+from sys import argv
 
 print("Starting...")
 
@@ -26,7 +27,10 @@ print("Dataset loaded")
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
 
-# TODO: load model
+save_path = argv[1]
+save_dict = torch.load(save_path)
+model_saved = save_dict['model_state_dict']
+model.load_state_dict(model_saved)
 
 print("Model loaded")
 
