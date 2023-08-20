@@ -13,8 +13,6 @@ print("Device in use: ", device)
 
 _, _, test_paths = get_dataset_paths()
 
-test_paths = test_paths[0:40]
-
 transform = tr.Compose([
     MyToTensor()
 ])
