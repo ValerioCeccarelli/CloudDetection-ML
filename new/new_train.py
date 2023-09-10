@@ -151,6 +151,10 @@ def load_model(model, optimizer, scheduler, epoch):
 
 
 def get_last_saved_epoch() -> int:
+    '''
+    Returns the last epoch saved in the save.txt file.
+    If the file doesn't exist, it creates it and returns -1.
+    '''
     if not os.path.exists(f"{SAVED_FOLDER}/{SAVE_FILE}"):
         if not os.path.exists(SAVED_FOLDER):
             os.mkdir(SAVED_FOLDER)
@@ -161,7 +165,7 @@ def get_last_saved_epoch() -> int:
         lines = f.readlines()
 
         if len(lines) == 1:
-            return 0
+            return -1
         else:
             last_line = lines[-1]
             epoch = int(last_line.split(",")[0])
@@ -204,7 +208,6 @@ model = model.to(device)
 last_epoch = get_last_saved_epoch()
 
 optimizer = Adam(model.parameters(), lr=0.00025, betas=(0.5, 0.9))
-optimizer.param_groups[0]['initial_lr'] = 0.00025
 scheduler = ExponentialLR(optimizer, gamma=0.95, last_epoch=last_epoch)
 
 if last_epoch != 0:

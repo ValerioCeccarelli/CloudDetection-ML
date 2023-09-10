@@ -57,14 +57,19 @@ with torch.no_grad():
         output1 = output1.squeeze(1)
         output1 = torch.where(output1 > 0.5, 1, 0)
 
-        label = label.to(device)
+        label: torch.Tensor = label.to(device)
         label = label.squeeze(1)
 
+        tp_img = (output1 == 1) & (label == 1)
+        tn_img = (output1 == 0) & (label == 0)
+        fp_img = (output1 == 1) & (label == 0)
+        fn_img = (output1 == 0) & (label == 1)
+
         # confusion matrix
-        tp += torch.sum((output1 == 1) & (label == 1))
-        tn += torch.sum((output1 == 0) & (label == 0))
-        fp += torch.sum((output1 == 1) & (label == 0))
-        fn += torch.sum((output1 == 0) & (label == 1))
+        tp += torch.sum(tp_img)
+        tn += torch.sum(tn_img)
+        fp += torch.sum(fp_img)
+        fn += torch.sum(fn_img)
 
         if i % (len(test_loader) // 10) == 0:
             percent = i * 100 // len(test_loader)

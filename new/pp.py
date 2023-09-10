@@ -17,8 +17,8 @@ model = CDFM3SF([4, 6, 3], gf_dim=4)  # 1.107.439
 # print(output[0].shape)
 
 # print the number of parameters
-print('Number of parameters: {}'.format(sum(p.numel()
-      for p in model.parameters())))
+# print('Number of parameters: {}'.format(sum(p.numel()
+#       for p in model.parameters())))
 
 # resnet18 = models.resnet152(pretrained=False) # 60.192.808
 # resnet = models.resnet18(pretrained=False)  # 11.689.512
@@ -52,3 +52,15 @@ print('Number of parameters: {}'.format(sum(p.numel()
 
 
 # count_parameters(model)
+
+last_epoch = 0
+optimizer = Adam(model.parameters(), lr=0.00025, betas=(0.5, 0.9))
+optimizer.param_groups[0]['initial_lr'] = 0.00025
+scheduler = ExponentialLR(optimizer, gamma=0.90, last_epoch=last_epoch)
+print("Scheduler loaded")
+print(scheduler.get_last_lr())
+scheduler.step()
+print(scheduler.get_last_lr())
+scheduler.step()
+print(scheduler.get_last_lr())
+scheduler.state_dict()
