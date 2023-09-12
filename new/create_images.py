@@ -5,7 +5,7 @@ from my_dataset import MyDataset, get_dataset_paths
 import torch
 from torch.utils.data import DataLoader
 from sys import argv
-import mathplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 def create_image_from_confusion_matrix(tp: torch.Tensor, tn: torch.Tensor, fp: torch.Tensor, fn: torch.Tensor, tp_color=(0, 255, 0), tn_color=(255, 0, 0), fp_color=(0, 0, 255), fn_color=(255, 255, 255)):
