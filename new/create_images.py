@@ -125,6 +125,8 @@ with torch.no_grad():
         input = np.transpose(input, (1, 2, 0))
         input = input[..., ::-1]
 
+        output1 = np.transpose(output1, (1, 2, 0))
+
         axarr[i, 0].imshow(input)
         axarr[i, 1].imshow(output1, cmap='gray')
         axarr[i, 2].imshow(label, cmap='gray')
