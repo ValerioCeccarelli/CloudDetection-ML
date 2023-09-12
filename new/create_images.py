@@ -76,7 +76,7 @@ model.load_state_dict(model_saved)
 print("Model loaded")
 
 fig, axarr = plt.subplots(
-    len(test_paths), 4, figsize=(15, 5 * len(test_paths)))
+    len(test_paths), 4, figsize=(15, 5 * len(test_paths)), squeeze=False)
 
 axarr[0, 0].set_title('Input')
 axarr[0, 1].set_title('Prediction')
