@@ -26,6 +26,11 @@ def create_image_from_confusion_matrix(tp: torch.Tensor, tn: torch.Tensor, fp: t
     fp = fp.cpu().numpy()
     fn = fn.cpu().numpy()
 
+    tp = np.transpose(tp, (1, 2, 0))
+    tn = np.transpose(tn, (1, 2, 0))
+    fp = np.transpose(fp, (1, 2, 0))
+    fn = np.transpose(fn, (1, 2, 0))
+
     # create image
     img = np.zeros((tp.shape[0], tp.shape[1], 3), dtype=np.uint8)
 
