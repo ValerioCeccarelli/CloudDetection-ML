@@ -129,9 +129,13 @@ with torch.no_grad():
         label = np.transpose(label, (1, 2, 0))
 
         axarr[i, 0].imshow(input)
+        axarr[i, 0].axis('off')
         axarr[i, 1].imshow(output1, cmap='gray')
+        axarr[i, 1].axis('off')
         axarr[i, 2].imshow(label, cmap='gray')
+        axarr[i, 2].axis('off')
         axarr[i, 3].imshow(diff)
+        axarr[i, 3].axis('off')
 
 plt.savefig('create_images.png')
 
