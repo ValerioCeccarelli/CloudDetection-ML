@@ -8,7 +8,7 @@ from sys import argv
 import matplotlib.pyplot as plt
 
 
-def create_image_from_confusion_matrix(tp: torch.Tensor, tn: torch.Tensor, fp: torch.Tensor, fn: torch.Tensor, tp_color=(0, 255, 0), tn_color=(255, 0, 0), fp_color=(0, 0, 255), fn_color=(255, 255, 255)):
+def create_image_from_confusion_matrix(tp: torch.Tensor, tn: torch.Tensor, fp: torch.Tensor, fn: torch.Tensor, tp_color=(255, 255, 255), tn_color=(0, 0, 0), fp_color=(0, 0, 255), fn_color=(255, 0, 0)):
     """
     Create an image from the confusion matrix
     :param tp: true positive
@@ -119,13 +119,14 @@ with torch.no_grad():
         diff = create_image_from_confusion_matrix(
             tp_img, tn_img, fp_img, fn_img)
 
-        output1 = output1.cpu()[0][0].detach().numpy()
-        label = label.cpu()[0][0].detach().numpy()
+        output1 = output1.cpu().detach().numpy()
+        label = label.cpu().detach().numpy()
         input = data_10m.cpu()[0][:3].detach().numpy()
         input = np.transpose(input, (1, 2, 0))
         input = input[..., ::-1]
 
         output1 = np.transpose(output1, (1, 2, 0))
+        label = np.transpose(label, (1, 2, 0))
 
         axarr[i, 0].imshow(input)
         axarr[i, 1].imshow(output1, cmap='gray')
@@ -133,3 +134,6 @@ with torch.no_grad():
         axarr[i, 3].imshow(diff)
 
 plt.savefig('create_images.png')
+
+
+# python .\create_images.py .\safe\save_22.pth ..\dataset\S2A_MSIL1C_20180930T030541_N0206_R075_T49QDD_20180930T060706\19_10 ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\19_21 ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\21_20 ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\21_22

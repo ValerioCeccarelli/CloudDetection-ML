@@ -1,8 +1,11 @@
 data/
 dataset/
+dataset_old/
 models/
 loss.csv
 __pycache__/
 .vscode/
+
+new/safe/*.pth
 
 *.csv
