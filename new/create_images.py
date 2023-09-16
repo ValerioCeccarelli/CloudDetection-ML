@@ -88,10 +88,13 @@ print("Model loaded")
 fig, axarr = plt.subplots(
     len(test_paths), 4, figsize=(15, 4 * len(test_paths)), squeeze=False)
 
-axarr[0, 0].set_title('Input')
-axarr[0, 1].set_title('Prediction')
-axarr[0, 2].set_title('Ground truth')
-axarr[0, 3].set_title('Differences')
+fig.subplots_adjust(left=0.02, right=0.98, bottom=0, top=1, wspace=0.2, hspace=0)
+
+ft = 20
+axarr[0, 0].set_title('Input', fontsize=ft)
+axarr[0, 1].set_title('Prediction', fontsize=ft)
+axarr[0, 2].set_title('Ground truth', fontsize=ft)
+axarr[0, 3].set_title('Differences', fontsize=ft)
 
 model.eval()
 with torch.no_grad():
