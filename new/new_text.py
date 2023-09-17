@@ -19,8 +19,8 @@ _, _, test_paths = get_dataset_paths()
 
 test_paths = [
     path for path in test_paths if
-    # "S2A_MSIL1C_20191001T050701_N0208_R019_T45TXN_20191002T142939" in path  # or
-    # "S2A_MSIL1C_20200416T042701_N0209_R133_T46SFE_20200416T074050" in path  # or
+    "S2A_MSIL1C_20191001T050701_N0208_R019_T45TXN_20191002T142939" in path or
+    "S2A_MSIL1C_20200416T042701_N0209_R133_T46SFE_20200416T074050" in path or
     "S2A_MSIL1C_20200528T050701_N0209_R019_T44SPC_20200528T082127" in path
 ]
 
@@ -37,10 +37,13 @@ model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
 
 if len(argv) > 1:
+    print(f"Loading model from {argv[1]}")
     save_path = argv[1]
     save_dict = torch.load(save_path)
     model_saved = save_dict['model_state_dict']
     model.load_state_dict(model_saved)
+else:
+    print("No model path provided, using default model")
 
 print("Model loaded")
 
