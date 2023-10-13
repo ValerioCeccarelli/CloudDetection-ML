@@ -21,7 +21,7 @@ def imgread(path) -> np.ndarray:
 def imgwrite(path, narray, compress="None") -> None:
     s = narray.shape
     dt_name = narray.dtype.name
-    # TODO: controllare questo for che fa una cosa strana
+    
     for i in range(len(list1)):
         if list1[i] in dt_name.lower():
             datatype = list2[i]

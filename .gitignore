@@ -1,6 +1,7 @@
 data/
 dataset/
 dataset_old/
+dataset_old_2/
 models/
 loss.csv
 __pycache__/

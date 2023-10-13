@@ -1,24 +1,59 @@
 import torch
-from torch.optim import Adam, Optimizer
-from my_dataset import MyDataset, get_dataset_paths, count_clouds_class
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ExponentialLR
+from my_dataset import MyDataset, get_dataset_paths, count_clouds_class, divide_dataset_path
 from torch.utils.data import DataLoader
-from CDFM3SF import CDFM3SF
-from saver import Saver
+from my_model import CDFM3SF
 import torchvision.transforms as tr
 import torch.nn as nn
 from my_transforms import *
+import time
+import torch.nn as nn
+from my_loss import MyBCELoss
+from my_saver import MySaver
+from my_random_search import MyRandomSearch
+import sys
+
+# TODO: docstring
+# TODO: use the real model instead of nn.Module?
+# TODO: add verbose to print the status
+# TODO: use some beautiful library toi print the percentages?
 
 
-def train(model, loader, optimizer: Optimizer, loss_fn, saver: Saver):
+def train_epoch(model: nn.Module, loader: DataLoader, loss_fn: MyBCELoss, optimizer: Adam, device: torch.device):
     model.train()
 
-    epoch = saver.get_last_epoch() + 1
+    loss_list = []
+    for i, (data, label) in enumerate(loader):
+        optimizer.zero_grad()
 
-    while True:
+        data_10m, data_20m, data_60m = data
+
+        data_10m = data_10m.to(device)
+        data_20m = data_20m.to(device)
+        data_60m = data_60m.to(device)
+        label = label.to(device)
+
+        outputs = model(data_10m, data_20m, data_60m)
+        loss = loss_fn(outputs, label)
+
+        loss.backward()
+        optimizer.step()
+
+        loss_list.append(loss.item())
+
+    mean_loss = sum(loss_list) / len(loss_list)
+
+    return mean_loss
+
+
+def validation(model: nn.Module, loader: DataLoader, loss_fn: MyBCELoss, device: torch.device):
+    with torch.no_grad():
+        model.eval()
+
         loss_list = []
-        for data, label in loader:
-            optimizer.zero_grad()
 
+        for i, (data, label) in enumerate(loader):
             data_10m, data_20m, data_60m = data
 
             data_10m = data_10m.to(device)
@@ -26,71 +61,136 @@ def train(model, loader, optimizer: Optimizer, loss_fn, saver: Saver):
             data_60m = data_60m.to(device)
             label = label.to(device)
 
-            output1, output2, output3 = model(data_10m, data_20m, data_60m)
-            loss: torch.Tensor = loss_fn(output1, output2, output3, label)
-
-            loss.backward()
-            optimizer.step()
+            outputs = model(data_10m, data_20m, data_60m)
+            loss = loss_fn(outputs, label)
 
             loss_list.append(loss.item())
 
         mean_loss = sum(loss_list) / len(loss_list)
-        saver.save(epoch, mean_loss)
 
-        print(f"Epoch: {epoch}, Loss: {mean_loss}")
-
-        epoch += 1
+        return mean_loss
 
 
-def my_loss(output1, output2, output3, label) -> torch.Tensor:
-    output1 = output1.squeeze(1)
-    output2 = output2.squeeze(1)
-    output3 = output3.squeeze(1)
-    label = label.squeeze(1)
+def train(
+        model: nn.Module,
+        optimizer: Adam,
+        scheduler: ExponentialLR,
+        train_loader: DataLoader,
+        validation_loader: DataLoader,
+        loss_fn: MyBCELoss,
+        device: torch.device,
+        saver: MySaver,
+        current_epoch: int,
+        num_train_epoch: int
+):
+    for epoch_number in range(current_epoch, current_epoch + num_train_epoch):
+        start_time = time.time()
+        train_mean_loss = train_epoch(
+            model, train_loader, loss_fn, optimizer, device)
+        end_time = time.time()
 
-    label1 = label
-    label2 = tr.Resize((192, 192), antialias=False)(label)
-    label3 = tr.Resize((64, 64), antialias=False)(label)
+        print(
+            f"Epoch: {epoch_number}, Loss: {train_mean_loss}, Time: {end_time - start_time}")
 
-    weight = torch.Tensor([n_background/n_clouds]).to(device)
-    loss_fn = nn.BCEWithLogitsLoss(weight=weight)
+        start_time = time.time()
+        validation_mean_loss = validation(
+            model, validation_loader, loss_fn, device)
+        end_time = time.time()
 
-    loss1 = loss_fn(output1, label1)
-    loss2 = loss_fn(output2, label2)
-    loss3 = loss_fn(output3, label3)
+        print(
+            f" -   Validation loss: {validation_mean_loss}, Time: {end_time - start_time}")
 
-    return 1*loss1 + 0.1*loss2 + 0.01*loss3
+        scheduler.step()
+        saver.save_state(model, optimizer, scheduler, epoch_number)
 
 
-print("Starting...")
+def print_error(message):
+    print(message)
+    print("python train.py <save_file_name> [create_if_not_exist]")
+    print()
+    print("Example 1: python train.py existing_save_file.pth")
+    print()
+    print("Example 2: python train.py save_file_to_be_created.pth create_if_not_exist")
+    exit()
+
+
+if len(sys.argv) > 3 or len(sys.argv) < 2:
+    print_error("Too many argumnets, the right configuration shoul be:")
+
+file_save_name = sys.argv[1]
+create_if_not_exist = False
+
+if not file_save_name.endswith(".pth"):
+    print_error(f"The file {sys.argv[1]} should be a .pth file.")
+
+if len(sys.argv) == 3:
+    if sys.argv[2] != 'create_if_not_exist':
+        print_error(f"Invalid third argument provided '{sys.argv[2]}'.")
+
+    create_if_not_exist = True
+
+
+print("Start program...")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device in use: ", device)
 
-train_paths, _, _ = get_dataset_paths()
-
-transform = tr.Compose([
+train_transform = tr.Compose([
     MyToTensor(),
     MyRandomVerticalFlip(p=0.5),
     MyRandomHorizontalFlip(p=0.5),
     MyRandomRotation(p=0.5, degrees=90)
 ])
 
-train_dataset = MyDataset(train_paths, transform=transform)
+validation_transform = tr.Compose([
+    MyToTensor()
+])
+
+images_paths, _ = get_dataset_paths()
+
+n_clouds, n_background = count_clouds_class(images_paths)
+# n_clouds = 433635457
+# n_background = 2265694079
+
+dataset = MyDataset(images_paths, transform=train_transform)
+
+weight = n_background/n_clouds
+loss_fn = MyBCELoss(weight, loss_ratios=[1, 0.1, 0.01], device=device)
+
+iperparameters = {
+    "beta1": [0.1, 0.5, 0.9],
+    "beta2": [0.1, 0.5, 0.9],
+    "gamma": [0.95, 0.80, 0.65],
+    "gf_dim": [64],
+    "lr": [0.00025]
+}
+
+random_search = MyRandomSearch(iperparameters, 3)
+
+iper = next(iter(random_search))
+beta1 = iper['beta1']
+beta2 = iper['beta2']
+gamma = iper['gamma']
+gf_dim = iper["gf_dim"]
+lr = iper["lr"]
+
+train_dataset, validation_dataset = divide_dataset_path(
+    dataset, validation_set_ratio=0.1)
+
 train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+validation_loader = DataLoader(validation_dataset, batch_size=4)
 
-print("Dataset loaded")
-
-n_clouds, n_background = count_clouds_class(train_paths)
-print(f"Clouds: {n_clouds}, Backgrounds: {n_background}")
-
-model = CDFM3SF([4, 6, 3], gf_dim=64)
+model = CDFM3SF([4, 6, 3], gf_dim=gf_dim)
 model = model.to(device)
 
-saver = Saver(model)
-saver.load()
+optimizer = Adam(model.parameters(), lr=lr, betas=(beta1, beta2))
+scheduler = ExponentialLR(optimizer, gamma=gamma, last_epoch=-1)
 
-optimizer = Adam(model.parameters(), lr=0.00025, betas=(0.5, 0.9))
+saver = MySaver(file_save_name, create_if_not_exist=True)
 
-print("Starting training...")
-train(model, train_loader, optimizer, my_loss, saver)
+last_epoch = saver.load_last_state_if_present(model, optimizer, scheduler)
+
+current_epoch = last_epoch+1 if last_epoch is not None else 0
+
+print("Start training...")
+train(model, optimizer, scheduler, train_loader,
+      validation_loader, loss_fn, device, saver, current_epoch, 50)

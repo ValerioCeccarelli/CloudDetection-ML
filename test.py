@@ -1,45 +1,55 @@
-from CDFM3SF import CDFM3SF
-from saver import Saver
+from my_model import CDFM3SF
 import torchvision.transforms as tr
 from my_transforms import *
-from my_dataset import MyDataset, get_dataset_paths, count_clouds_class
+from my_dataset import MyDataset, get_dataset_paths
 import torch
 from torch.utils.data import DataLoader
+from sys import argv
+from my_saver import MySaver
 
-print("Starting...")
+# TODO: add the command only_snow to test the now images
+# TODO: add the check for .pth file
+# TODO: maybe get_dataset_paths can be splitted in 2 diffeent function
+# ---- TODO: the new get_test_dataset can return a dict image:list_of_path to also print the values of single immage
+# ---- TODO: create a nice way to fromat the result table
+
+
+if len(argv) > 3 or len(argv) == 2:
+    print("Usage: python test.py [model_path epoch_number]")
+    exit()
+
+print("Start program...")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device in use: ", device)
 
-_, _, test_paths = get_dataset_paths()
-
-test_paths = test_paths[:len(test_paths)//2]
+_, test_paths = get_dataset_paths()
 
 transform = tr.Compose([
     MyToTensor()
 ])
 
-train_dataset = MyDataset(test_paths, transform=transform)
-test_loader = DataLoader(train_dataset, batch_size=1, shuffle=False)
-
-print("Dataset loaded")
+test_dataset = MyDataset(test_paths, transform=transform)
+test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
 
-saver = Saver(model)
-saver.load()
+if len(argv) > 1:
+    print(f"Loading model from {argv[1]}")
+    saver = MySaver(argv[1], create_if_not_exist=False)
+    epoch = int(argv[2])
+    saver.load_model_at_epoch(epoch, model)
+else:
+    print("No model path provided, using default model")
 
-model.eval()
-
-
-print("Model loaded")
+print("Start test...")
 
 tp = 0
 tn = 0
 fp = 0
 fn = 0
 
+model.eval()
 with torch.no_grad():
     for i, (data, label) in enumerate(test_loader):
         data_10m, data_20m, data_60m = data
@@ -54,14 +64,19 @@ with torch.no_grad():
         output1 = output1.squeeze(1)
         output1 = torch.where(output1 > 0.5, 1, 0)
 
-        label = label.to(device)
+        label: torch.Tensor = label.to(device)
         label = label.squeeze(1)
 
+        tp_img = (output1 == 1) & (label == 1)
+        tn_img = (output1 == 0) & (label == 0)
+        fp_img = (output1 == 1) & (label == 0)
+        fn_img = (output1 == 0) & (label == 1)
+
         # confusion matrix
-        tp += torch.sum((output1 == 1) & (label == 1))
-        tn += torch.sum((output1 == 0) & (label == 0))
-        fp += torch.sum((output1 == 1) & (label == 0))
-        fn += torch.sum((output1 == 0) & (label == 1))
+        tp += torch.sum(tp_img)
+        tn += torch.sum(tn_img)
+        fp += torch.sum(fp_img)
+        fn += torch.sum(fn_img)
 
         if i % (len(test_loader) // 10) == 0:
             percent = i * 100 // len(test_loader)

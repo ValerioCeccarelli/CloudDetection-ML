@@ -1,7 +1,9 @@
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, random_split
 from images_utils import imgread
 import numpy as np
 import os
+
+# TODO: remove the validation set and add the sistem for random split cross validation
 
 
 class MyDataset(Dataset):
@@ -60,13 +62,6 @@ def get_dataset_paths(root_path: str = None) -> tuple[list[str], list[str], list
         "S2A_MSIL1C_20200528T050701_N0209_R019_T44SPC_20200528T082127"
     ]
 
-    validationlist = [
-        "S2A_MSIL1C_20210207T023851_N0209_R089_T52UCU_20210207T040210",
-        "S2A_MSIL1C_20210126T052111_N0209_R062_T44SNE_20210126T063836",
-        "S2A_MSIL1C_20210102T054231_N0209_R005_T43SFB_20210102T065941",
-        "S2A_MSIL1C_20201206T041141_N0209_R047_T47SMV_20201206T053320"
-    ]
-
     if root_path is None:
         root_path = os.getcwd()
 
@@ -76,7 +71,6 @@ def get_dataset_paths(root_path: str = None) -> tuple[list[str], list[str], list
         raise Exception(f'Dataset directory not found. {dataset_dir}')
 
     train_paths = []
-    validation_paths = []
     test_paths = []
     for image in os.listdir(dataset_dir):
         image_path = os.path.join(dataset_dir, image)
@@ -84,12 +78,20 @@ def get_dataset_paths(root_path: str = None) -> tuple[list[str], list[str], list
             cutted_img_path = os.path.join(image_path, cutted_img)
             if image in testlist:
                 test_paths.append(cutted_img_path)
-            elif image in validationlist:
-                validation_paths.append(cutted_img_path)
             else:
                 train_paths.append(cutted_img_path)
 
-    return train_paths, validation_paths, test_paths
+    return train_paths, test_paths
+
+
+def divide_dataset_path(original_set: Dataset, validation_set_ratio: float = 0.1) -> tuple[int, int]:
+    total_size = len(original_set)
+    val_size = int(validation_set_ratio * total_size)
+    train_size = total_size - val_size
+
+    train_dataset, val_dataset = random_split(
+        original_set, [train_size, val_size])
+    return train_dataset, val_dataset
 
 
 def count_clouds_class(paths: list[str]) -> tuple[int, int]:
