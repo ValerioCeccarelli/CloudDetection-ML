@@ -36,7 +36,35 @@ In particular, to have a better comparison I colored the false negatives in red 
 
 ### Requirements
 
-TODO: to be defined
+- Python 3.9 or 3.11
+- GDAL library from OSGEO
+    + `pip` has some problems with this library so you probably need to install it from a local whl file that you can find [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal) or [here](https://github.com/cgohlke/geospatial-wheels/releases)
+    + since the links provided before are not officials, i saved in this repo sime gdal wheel file (in `.\gdal` folder)
+- PyTorch framework, with the libraries `torch` and ### Traintorchvision`
+- Numpy library
+- Matplotlib library
+- zenodo-get
+
+#### Optional but suggested
+The training proces in this project can take advantages of GPU acceleration in order to speed up the execution; to use this feature you need:
+
+- CUDA drivers ([here](https://developer.nvidia.com/cuda-downloads))
+- PyTorch with CUDA compatibility
+    + you can find how to install the right version with the help of the official web page [here](https://pytorch.org/)
+
+### Dataset download
+The dataset can be easily downloaded with the zenodo_get tool
+```bash
+python -m zenodo_get 10.5281/zenodo.5511793 -o data
+```
+it is important to configure `.\data` as the download folder because it will used by the `process_images` script to setup the dataset.
+```bash
+python .\process_images.py
+```
+(optional) since now there is the `.\dataset` path populated with the ready to use dataset, and since the `.\data` path is 30GB if you want to save space you can delete that folder
+```bash
+rm -r .\data\
+```
 
 ### Train
 
