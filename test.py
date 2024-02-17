@@ -14,7 +14,7 @@ from my_saver import MySaver
 # ---- TODO: create a nice way to fromat the result table
 
 
-if len(argv) > 3 or len(argv) == 2:
+if len(argv) != 1 and len(argv) != 3:
     print("Usage: python test.py [model_path epoch_number]")
     exit()
 
@@ -23,6 +23,8 @@ print("Start program...")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 _, test_paths = get_dataset_paths()
+
+test_paths = test_paths[:100]
 
 transform = tr.Compose([
     MyToTensor()
@@ -34,7 +36,7 @@ test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
 
-if len(argv) > 1:
+if len(argv) == 3:
     print(f"Loading model from {argv[1]}")
     saver = MySaver(argv[1], create_if_not_exist=False)
     epoch = int(argv[2])

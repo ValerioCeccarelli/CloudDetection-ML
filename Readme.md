@@ -68,7 +68,7 @@ rm -r .\data\
 
 ### Train
 
-You can run a train session with teh command:
+You can run a train session with the command:
 ```bash
 python train.py <save_file_name> [create_if_not_exist]
 ```
@@ -87,7 +87,18 @@ python train.py save_file_to_be_created.pth create_if_not_exist
 
 ### Test
 
-TODO: to be defined
+You can run a test session with the command:
+```bash
+python test.py \[model_path epoch_number\]
+```
+If you don't specify the save and the epoch number to use, then the uninitialized model is used
+
+#### Examples
+
+If you already have the save file you want to use and use the epoch 1, then you can run:
+```bash
+python train.py existing_save_file.pth 1
+```
 
 ### Examples generator
 
