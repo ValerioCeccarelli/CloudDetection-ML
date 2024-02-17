@@ -1,1 +1,0 @@
-epoch,train_loss,validation_loss,file_name
