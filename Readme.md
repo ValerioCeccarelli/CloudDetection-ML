@@ -102,4 +102,14 @@ python train.py existing_save_file.pth 1
 
 ### Examples generator
 
-TODO: to be defined
+To create the "visual test" image you see in this readme you can run:
+
+```bash
+python example_generator.py <save_file> <epoch> <output_image> <image_path>...
+```
+
+#### Example
+
+```bash
+python .\example_generator.py .\save_file_to_be_created.pth 1 output.png dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\22_15
+```

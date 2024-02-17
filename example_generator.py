@@ -6,11 +6,9 @@ import torch
 from torch.utils.data import DataLoader
 from sys import argv
 import matplotlib.pyplot as plt
-
-
-# TODO: to be totaly rewrited
-# ---- TODO: add a lot of parameters to configure the style?
-
+import sys
+from my_saver import MySaver
+import math
 
 def create_image_from_confusion_matrix(tp: torch.Tensor, tn: torch.Tensor, fp: torch.Tensor, fn: torch.Tensor, tp_color=(255, 255, 255), tn_color=(0, 0, 0), fp_color=(0, 0, 255), fn_color=(255, 0, 0)):
     """
@@ -58,17 +56,19 @@ def create_image_from_confusion_matrix(tp: torch.Tensor, tn: torch.Tensor, fp: t
     return img
 
 
-if len(argv) < 3:
-    print(
-        "Usage: python new_test.py <model_path> <imge_path> [other_images_paths]")
-    exit()
+if len(sys.argv) < 5:
+    print("Usage: python example_generator.py <save_file> <epoch> <output_image> <image_path>...")
+    sys.exit(1)
 
-print("Starting...")
+argv = sys.argv
+save_file = argv[1]
+epoch = int(argv[2])
+output_image = argv[3]
+test_paths = argv[4:]
+
+print("Start program...")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device in use: ", device)
-
-test_paths = argv[2:]
 
 transform = tr.Compose([
     MyToTensor()
@@ -82,10 +82,11 @@ print("Dataset loaded")
 model = CDFM3SF([4, 6, 3], gf_dim=64)
 model = model.to(device)
 
-save_path = argv[1]
-save_dict = torch.load(save_path)
-model_saved = save_dict['model_state_dict']
-model.load_state_dict(model_saved)
+saver = MySaver(save_file, create_if_not_exist=True)
+
+saver.load_model_at_epoch(epoch, model)
+
+model.eval()
 
 print("Model loaded")
 
@@ -101,7 +102,6 @@ axarr[0, 1].set_title('Prediction', fontsize=ft)
 axarr[0, 2].set_title('Ground truth', fontsize=ft)
 axarr[0, 3].set_title('Differences', fontsize=ft)
 
-model.eval()
 with torch.no_grad():
     for i, (data, label) in enumerate(test_loader):
         data_10m, data_20m, data_60m = data
@@ -145,11 +145,4 @@ with torch.no_grad():
         axarr[i, 3].imshow(diff)
         axarr[i, 3].axis('off')
 
-plt.savefig('create_images.png')
-
-
-# example no snow
-# python .\create_images.py .\safe\save_22.pth ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\22_15 ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\19_21 ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\21_20 ..\dataset\S2A_MSIL1C_20190328T033701_N0207_R061_T49TCF_20190328T071457\21_22
-
-# example with snow
-# python .\create_images.py .\safe\save_22.pth ..\dataset\S2A_MSIL1C_20191001T050701_N0208_R019_T45TXN_20191002T142939\4_25 ..\dataset\S2A_MSIL1C_20191001T050701_N0208_R019_T45TXN_20191002T142939\5_25 ..\dataset\S2A_MSIL1C_20191001T050701_N0208_R019_T45TXN_20191002T142939\5_26 ..\dataset\S2A_MSIL1C_20200416T042701_N0209_R133_T46SFE_20200416T074050\10_11
+plt.savefig(output_image)
