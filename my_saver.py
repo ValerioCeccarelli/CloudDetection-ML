@@ -87,7 +87,7 @@ class MySaver:
     def load_model_at_epoch(self, epoch: int, model: nn.Module):
         content: list = torch.load(self.__file_name)
         if epoch < len(content):
-            pass
+            model.load_state_dict(content[epoch][self.__MODEL_STATE_DICT])
         else:
             raise ValueError(
                 f"The file {self.__file_name} has only {len(content)} but you ask for index {epoch}")
